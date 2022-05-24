@@ -12,9 +12,10 @@ import (
 // Document represents a collection of unique words (tokens) in a logic
 // grouping of text (document).
 type Document struct {
-	ID    uuid.UUID
-	Meta  Meta
-	tfmap map[string]float64 // [term]: frequency
+	ID      uuid.UUID
+	Meta    Meta
+	content []byte             // Original document content
+	tfmap   map[string]float64 // [term]: frequency
 }
 
 // Document metadata map.
@@ -23,13 +24,20 @@ type Meta map[string]interface{}
 // Process input into a Document.
 func Process(input io.Reader, meta Meta) (*Document, error) {
 	s := bufio.NewScanner(input)
+	content := []byte(nil)
 	counts := make(map[string]int)
 	total := 0
 	for s.Scan() {
 		// Finds words, removes non-word characters.
 		wordRe := regexp.MustCompile(`\w+\b`)
+		line := s.Bytes()
+		var joiner []byte
+		if len(content) > 0 {
+			joiner = []byte("\n")
+		}
+		content = bytes.Join([][]byte{content, line}, joiner)
 		// Find words from line.
-		words := wordRe.FindAll(s.Bytes(), -1)
+		words := wordRe.FindAll(line, -1)
 		for _, word := range words {
 			total += 1
 			s := string(normalize(word))
@@ -52,9 +60,10 @@ func Process(input io.Reader, meta Meta) (*Document, error) {
 		return nil, err
 	}
 	return &Document{
-		ID:    id,
-		tfmap: tfmap,
-		Meta:  meta,
+		ID:      id,
+		content: content,
+		tfmap:   tfmap,
+		Meta:    meta,
 	}, nil
 }
 

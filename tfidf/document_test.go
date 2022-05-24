@@ -1,6 +1,9 @@
 package tfidf
 
 import (
+	"bytes"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -37,6 +40,42 @@ func TestProcessSetsMeta(t *testing.T) {
 
 	if !reflect.DeepEqual(expectedMeta, document.Meta) {
 		t.Errorf("expected %v, got %v", expectedMeta, document.Meta)
+	}
+}
+
+func TestProcessContent(t *testing.T) {
+	input := []byte("input")
+	inputReader := bytes.NewReader(input)
+	document, err := Process(inputReader, meta)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(input, document.content) {
+		t.Logf("size expected: %d, size got: %d", len(input), len(document.content))
+		t.Errorf("\nexpected: %v\ngot: %v", input, document.content)
+	}
+}
+
+func TestProcessContentFromFile(t *testing.T) {
+	f, err := os.Open("testdata/lorem.txt")
+	if err != nil {
+		t.Error(err)
+	}
+	expected, err := ioutil.ReadFile("testdata/lorem.txt")
+	if err != nil {
+		t.Error(err)
+	}
+	// Remove final newline.
+	expected = expected[:len(expected)-1]
+	defer f.Close()
+	document, err := Process(f, meta)
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(expected, document.content) {
+		t.Logf("size expected: %d, size got: %d", len(expected), len(document.content))
+		t.Errorf("\nexpected: %v\ngot: %v\n", expected, document.content)
 	}
 }
 
