@@ -14,9 +14,11 @@ import (
 type Document struct {
 	ID      uuid.UUID
 	Meta    Meta
-	content []byte             // Original document content
-	tfmap   map[string]float64 // [term]: frequency
+	content []byte // Original document content
+	tfmap   TF     // [term]: frequency
 }
+
+type TF map[string]float64
 
 // Document metadata map.
 type Meta map[string]interface{}

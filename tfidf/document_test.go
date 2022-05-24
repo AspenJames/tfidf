@@ -82,46 +82,46 @@ func TestProcessContentFromFile(t *testing.T) {
 func TestProcessDDT(t *testing.T) {
 	type ddt struct { // Data-driven test input format.
 		data     string
-		expected map[string]float64
+		expected TF
 	}
 	type testSuite map[string][]ddt
 	suite := testSuite{
 		"countsRepeated": {
 			{
 				data:     "word word repeated",
-				expected: map[string]float64{"word": 2.0 / 3.0, "repeated": 1.0 / 3.0},
+				expected: TF{"word": 2.0 / 3.0, "repeated": 1.0 / 3.0},
 			},
 			{
 				data:     "word separated word",
-				expected: map[string]float64{"word": 2.0 / 3.0, "separated": 1.0 / 3.0},
+				expected: TF{"word": 2.0 / 3.0, "separated": 1.0 / 3.0},
 			},
 		},
 		"ignoresCase": {
 			{
 				data:     "test Test TEST",
-				expected: map[string]float64{"test": 3.0 / 3.0},
+				expected: TF{"test": 3.0 / 3.0},
 			},
 			{
 				data:     "tEsT Test one TWO oNe TwO",
-				expected: map[string]float64{"test": 2.0 / 6.0, "one": 2.0 / 6.0, "two": 2.0 / 6.0},
+				expected: TF{"test": 2.0 / 6.0, "one": 2.0 / 6.0, "two": 2.0 / 6.0},
 			},
 		},
 		"removesSymbols": {
 			{
 				data:     "this && that",
-				expected: map[string]float64{"this": 1.0 / 2.0, "that": 1.0 / 2.0},
+				expected: TF{"this": 1.0 / 2.0, "that": 1.0 / 2.0},
 			},
 			{
 				data:     "Process removes %#$@! symbols",
-				expected: map[string]float64{"process": 1.0 / 3.0, "removes": 1.0 / 3.0, "symbols": 1.0 / 3.0},
+				expected: TF{"process": 1.0 / 3.0, "removes": 1.0 / 3.0, "symbols": 1.0 / 3.0},
 			},
 			{
 				data:     "Also removes, punctuation!!",
-				expected: map[string]float64{"also": 1.0 / 3.0, "removes": 1.0 / 3.0, "punctuation": 1.0 / 3.0},
+				expected: TF{"also": 1.0 / 3.0, "removes": 1.0 / 3.0, "punctuation": 1.0 / 3.0},
 			},
 			{
 				data:     "'Removes' \"quotations\"",
-				expected: map[string]float64{"removes": 1.0 / 2.0, "quotations": 1.0 / 2.0},
+				expected: TF{"removes": 1.0 / 2.0, "quotations": 1.0 / 2.0},
 			},
 		},
 	}
