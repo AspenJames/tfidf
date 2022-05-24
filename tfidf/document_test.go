@@ -5,13 +5,38 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 var meta Meta = make(Meta)
 
+// Shortcut for creating a Document, byo frequency map.
+func documentFactory(tfmap TF) *Document {
+	return &Document{
+		ID:    uuid.Must(uuid.NewRandom()),
+		Meta:  Meta{},
+		tfmap: tfmap,
+	}
+}
+
+func termListsEqual(expected, given []string) bool {
+	if len(expected) != len(given) {
+		return false
+	}
+	sort.Strings(expected)
+	sort.Strings(given)
+	for i, str := range given {
+		if str != expected[i] {
+			return false
+		}
+	}
+	return true
+}
 func TestProcessAssignsId(t *testing.T) {
 	input := strings.NewReader("input")
 	document, err := Process(input, meta)
@@ -140,6 +165,69 @@ func TestProcessDDT(t *testing.T) {
 						t.Errorf("incorrect tfmap, expected %v, got %v", test.expected, document.tfmap)
 					}
 				})
+			}
+		})
+	}
+}
+
+func TestGetTF(t *testing.T) {
+	type ddt struct {
+		tfmap    TF
+		term     string
+		expected float64
+	}
+	type testSuite map[string]ddt
+	suite := testSuite{
+		"termInMap": {
+			tfmap:    TF{"termA": 0.7, "termB": 0.3},
+			term:     "termA",
+			expected: 0.7,
+		},
+		"termNotInMap": {
+			tfmap:    TF{"termA": 0.7, "termB": 0.3},
+			term:     "termC",
+			expected: 0.0,
+		},
+	}
+	for label, test := range suite {
+		t.Run(label, func(t *testing.T) {
+			document := &Document{
+				tfmap: test.tfmap,
+			}
+			tf := document.GetTF(test.term)
+			if tf != test.expected {
+				t.Errorf("expected %f, got %f", test.expected, tf)
+			}
+		})
+	}
+}
+
+func TestGetTerms(t *testing.T) {
+	type ddt struct {
+		tfmap    TF
+		expected []string
+	}
+	type testSuite map[string]ddt
+	suite := testSuite{
+		"singleTerm": {
+			tfmap:    TF{"term": 1.0},
+			expected: []string{"term"},
+		},
+		"manyTerms": {
+			tfmap:    TF{"termA": 0.4, "termB": 0.2, "termC": 0.5},
+			expected: []string{"termA", "termB", "termC"},
+		},
+		"noTerms": {
+			tfmap:    TF{},
+			expected: []string{},
+		},
+	}
+	for label, test := range suite {
+		t.Run(label, func(t *testing.T) {
+			document := documentFactory(test.tfmap)
+			terms := document.GetTerms()
+			if !termListsEqual(test.expected, terms) {
+				t.Errorf("expected %v, got %v", test.expected, terms)
 			}
 		})
 	}

@@ -23,7 +23,25 @@ type TF map[string]float64
 // Document metadata map.
 type Meta map[string]interface{}
 
-// Process input into a Document.
+// Get a list of all terms in the Document.
+func (d *Document) GetTerms() []string {
+	var terms []string
+	for term := range d.tfmap {
+		terms = append(terms, term)
+	}
+	return terms
+}
+
+// Get the frequency of `term` in the Document.
+func (d *Document) GetTF(term string) float64 {
+	tf, ok := d.tfmap[term]
+	if !ok {
+		return 0
+	}
+	return tf
+}
+
+// Process `input` into a Document.
 func Process(input io.Reader, meta Meta) (*Document, error) {
 	s := bufio.NewScanner(input)
 	content := []byte(nil)
